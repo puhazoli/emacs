@@ -3,6 +3,9 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(TeX-source-correlate-method (quote synctex))
+ '(TeX-source-correlate-mode t)
+ '(TeX-source-correlate-start-server t)
  '(ansi-color-faces-vector
    [default default default italic underline success warning error])
  '(ansi-color-names-vector
@@ -10,7 +13,7 @@
  '(custom-enabled-themes nil)
  '(package-selected-packages
    (quote
-    (pyenv-mode jedi multiple-cursors zenburn-theme realgud py-autopep8 magit flycheck use-package pandoc-mode markdown-mode helm-projectile fill-column-indicator exec-path-from-shell ess elpy ein docker company-jedi auctex gruvbox-theme))))
+    (ess auctex-latexmk pyenv-mode jedi multiple-cursors zenburn-theme realgud py-autopep8 magit flycheck use-package pandoc-mode markdown-mode helm-projectile fill-column-indicator exec-path-from-shell elpy ein docker company-jedi auctex gruvbox-theme ESS))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -20,7 +23,7 @@
 ;; add MELPA package system
 (require 'package)
 (add-to-list 'package-archives
-             '("melpa-stable" . "https://stable.melpa.org/packages/") t)
+  '("melpa" . "http://melpa.milkbox.net/packages/") t)
 (package-initialize)
 ;; check if all the desired packages are installed
 (when (not package-archive-contents)
@@ -35,11 +38,17 @@
     realgud
     gruvbox-theme
     docker-tramp
-    multiple-cursors) 
+    multiple-cursors
+    reftex
+    exec-path-from-shell
+    tramp
+    ess
+    ) 
   "A list of packages to ensure are installed at launch.")
 (dolist (p my-packages)
   (when (not (package-installed-p p))
     (package-install p)))
+
 
 ;; enable elpy, activate default anaconda environment, use ipython, flycheck and py-autopep8
 (setenv "IPY_TEST_SIMPLE_PROMPT" "1") ;; for fixing bug in elpy with ipython console
@@ -47,7 +56,8 @@
 (setq elpy-rpc-python-command "python3")
 (setq python-shell-interpreter "python3")
 (pyvenv-activate (expand-file-name "~/anaconda3/"))
-(elpy-use-ipython)
+(setq python-shell-interpreter "ipython"
+      python-shell-interpreter-args "-i --simple-prompt")
 (when (require 'flycheck nil t)
   (setq elpy-modules (delq 'elpy-module-flymake elpy-modules))
   (add-hook 'elpy-mode-hook 'flycheck-mode))
@@ -57,7 +67,7 @@
 
 
 ;; use xetex instead of tex
-(setq-default TeX-engine 'xetex)
+(setq-default TeX-engine 'default)
 ;; disable welcome screen, menu and tool bar, enable line numbering,
 ;; disable git integration emacs, as we use magit and set up magit keybinding
 (setq inhibit-startup-screen t)
@@ -81,3 +91,27 @@
 (global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
 ;; load overwriting of selection
 (delete-selection-mode 1)
+(setq tramp-default-method "ssh")
+
+(setq TeX-auto-save t)
+(setq TeX-parse-self t)
+(setenv "PATH" (concat (getenv "PATH") ":/Library/TeX/texbin/"))
+(setq exec-path (append exec-path '("/Library/TeX/texbin/")))
+;; Turn on RefTeX in AUCTeX
+(add-hook 'LaTeX-mode-hook 'turn-on-reftex)
+;; Activate nice interface between RefTeX and AUCTeX
+(setq reftex-plug-into-AUCTeX t)
+
+(setq reftex-default-bibliography '("~/Desktop/uvt/citations.bib"))
+(setq ispell-program-name "/usr/local/bin/aspell")
+
+(when (memq window-system '(mac ns x))
+  (exec-path-from-shell-initialize))
+
+(setq TeX-view-program-selection '((output-pdf "PDF Viewer")))
+(setq TeX-view-program-list
+      '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
+
+;; ESS
+(require 'ess-site)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
